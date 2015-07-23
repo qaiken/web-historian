@@ -53,20 +53,18 @@ exports.downloadUrls = function(urlArray) {
   var getUrls = function(urlArray) {
     urlArray.forEach(function(url) {
       console.log('URL',url)
-      request('http://'+ url, function (err, res, body) {
+      request('http://'+url, function (err, res, body) {
         if (!err && res.statusCode == 200) {
           exports.addToArchive(url, body);
         }
       });
     });
   };
-  if(!urlArray) {
-    exports.readListOfUrls(function(urlList) {
-      getUrls(urlList);
-    });
+  if(urlArray) {
+    getUrls(urlArray);
     return;
   }
-  getUrls(urlArray);
+  exports.readListOfUrls(getUrls);
 };
 
 exports.addToArchive = function(url, body) {
