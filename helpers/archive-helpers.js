@@ -50,6 +50,7 @@ exports.isUrlArchived = function(url, callback){
 };
 
 exports.downloadUrls = function(urlArray) {
+  var getUrls = function(urlArray) {
     urlArray.forEach(function(url) {
       console.log('URL',url)
       request('http://'+ url, function (err, res, body) {
