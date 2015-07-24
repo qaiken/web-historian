@@ -35,7 +35,7 @@ exports.handleRequest = function (req, res) {
           archive.addUrlToList(siteUrl);
           archive.downloadUrls();
           statusCode = 302;
-          redirectPath = path.join(archive.paths.siteAssets,'loading.html');
+          redirectPath = '/loading.html';
         }
         res.writeHead(statusCode, {
           Location: redirectPath
