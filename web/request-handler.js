@@ -27,21 +27,22 @@ exports.handleRequest = function (req, res) {
       var redirectPath, statusCode;
       var dataObj = qs.parse(data);
       var siteUrl = dataObj.url;
-      archive.isUrlInList(siteUrl, function(exist){
-        if (exist) {
-          redirectPath = path.join(siteUrl);
-          statusCode = 301;
-        } else {
-          archive.addUrlToList(siteUrl);
-          archive.downloadUrls();
-          statusCode = 302;
-          redirectPath = path.join(archive.paths.siteAssets,'loading.html');
-        }
-        res.writeHead(statusCode, {
-          Location: redirectPath
+      archive.isUrlInList(siteUrl)
+        .then(function(exist) {
+          if (exist) {
+            redirectPath = path.join(siteUrl);
+            statusCode = 301;
+          } else {
+            archive.addUrlToList(siteUrl);
+            archive.downloadUrls();
+            statusCode = 302;
+            redirectPath = '/loading.html';
+          }
+          res.writeHead(statusCode, {
+            Location: redirectPath
+          });
+          res.end();
         });
-        res.end();
-      });
     });
   } else {
     res.writeHead(405);
