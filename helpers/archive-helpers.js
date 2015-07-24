@@ -2,6 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 var request = require('request');
+var Q = require('q');
 
 exports.paths = {
   siteAssets: path.join(__dirname, '../web/public'),
@@ -15,44 +16,45 @@ exports.initialize = function(pathsObj){
   });
 };
 
-exports.readListOfUrls = function(callback) {
+exports.readListOfUrls = function() {
+  var deferred = Q.defer();
   fs.readFile(exports.paths.list, function(err,data) {
     var urlList = data.toString().split("\n");
-    callback(urlList);
+    deferred.resolve(urlList);
   });
+  return deferred.promise;
 };
 
-exports.isUrlInList = function(url, callback){
-  exports.readListOfUrls(function(urlList) {
-    if (urlList.indexOf(url) >= 0) {
-      callback(true);
-    } else {
-      callback(false);
-    }
-  });
+exports.isUrlInList = function(url){
+  var deferred = Q.defer();
+  exports.readListOfUrls()
+    .then(function(urlList) {
+      deferred.resolve(urlList.indexOf(url) >= 0);
+    });
+  return deferred.promise;
 };
 
-exports.addUrlToList = function(url,callback){
+exports.addUrlToList = function(url){
+  var deferred = Q.defer();
   fs.appendFile(exports.paths.list, url + "\n", function(err){
-    if (err) throw err;
-    if(callback) callback();
+    if (err) deferred.reject(err);
+    deferred.resolve(true);
   });
+  return deferred.promise;
 };
 
-exports.isUrlArchived = function(url, callback){
+exports.isUrlArchived = function(url){
+  var deferred = Q.defer();
   fs.open(path.join(exports.paths.archivedSites, url), 'r', function(err, data){
-    if (err) {
-      callback(false);
-      return;
-    }
-    callback(true);
+    if (err) deferred.reject(err);
+    deferred.resolve(true);
   });
+  return deferred.promise;
 };
 
 exports.downloadUrls = function(urlArray) {
   var getUrls = function(urlArray) {
     urlArray.forEach(function(url) {
-      console.log('URL',url)
       request('http://'+ url, function (err, res, body) {
         if (!err && res.statusCode == 200) {
           exports.addToArchive(url, body);
@@ -61,16 +63,13 @@ exports.downloadUrls = function(urlArray) {
     });
   };
   if(!urlArray) {
-    exports.readListOfUrls(function(urlList) {
-      getUrls(urlList);
-    });
+    exports.readListOfUrls().then(getUrls);
     return;
   }
   getUrls(urlArray);
 };
 
 exports.addToArchive = function(url, body) {
-  console.log("url archive", url);
   fs.writeFile(path.join(exports.paths.archivedSites , url), body, function(err){
     if (err) throw err;
   });
