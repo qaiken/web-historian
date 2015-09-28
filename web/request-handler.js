@@ -27,7 +27,8 @@ exports.handleRequest = function (req, res) {
       var redirectPath, statusCode;
       var dataObj = qs.parse(data);
       var siteUrl = dataObj.url;
-      archive.isUrlInList(siteUrl, function(exist){
+      archive.isUrlInList(siteUrl)
+      .then(function(exist) {
         if (exist) {
           redirectPath = path.join(siteUrl);
           statusCode = 301;
